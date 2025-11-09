@@ -287,11 +287,27 @@ async def optimization_agent(query: str, context: Optional[Dict[str, Any]] = Non
 
 
 @api_router.post("/agents/report", response_model=AgentResponse)
-async def report_agent(query: str, context: Optional[Dict[str, Any]] = None):
-    """Report agent endpoint for comprehensive analysis."""
+async def report_agent(query: str = Form(...), context: Optional[str] = Form(None)):
+    """
+    Report agent endpoint for comprehensive analysis.
+    
+    Args:
+        query: Question or analysis request
+        context: JSON string with simulation data (optional)
+    """
+    # Parse context if it's a JSON string
+    context_dict = None
+    if context:
+        try:
+            import json
+            context_dict = json.loads(context)
+        except json.JSONDecodeError:
+            logger.warning("Failed to parse context JSON, using as-is")
+            context_dict = {"raw_context": context}
+    
     request = AgentRequest(
         query=query,
-        context=context,
+        context=context_dict,
         agent_type="report"
     )
     return await agent_analyze(request)

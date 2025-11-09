@@ -96,6 +96,20 @@ A full-featured FastAPI web application that simulates clinical trial outcomes w
 - **Optimization Agent**: Suggests protocol improvements
 - **Report Agent**: Generates comprehensive trial insights
 - **Chat Agent**: Handles natural language queries and updates
+- **🤖 One-Click AI Analysis**: Generate detailed reports directly from simulation results
+
+**AI Analysis Feature:**
+- **Accessible from**: Results page and Simulations list
+- **Click "Get AI Analysis"** button → Agent analyzes simulation data in real-time
+- **Comprehensive Report Includes**:
+  - Overall assessment of trial design and outcomes
+  - Key strengths and potential risks identification
+  - Statistical significance analysis
+  - Cost-effectiveness evaluation
+  - Protocol optimization recommendations
+- **Visual Display**: Formatted report with confidence score, sources, and timestamp
+- **Smart Routing**: Automatically uses Google ADK (Gemini 2.0 Flash) or falls back to rule-based agents
+- **Copy & Export**: One-click copy analysis to clipboard
 
 ### 4. **Interactive Simulation Management**
 - Create new clinical trial simulations
