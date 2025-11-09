@@ -200,6 +200,39 @@
         }, 5000);
     }
 
+    // Get browser GPS location
+    async function getBrowserLocation() {
+        return new Promise((resolve) => {
+            if (!navigator.geolocation) {
+                console.log('Geolocation not supported by browser');
+                resolve(null);
+                return;
+            }
+            
+            console.log('Requesting GPS location permission...');
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    console.log('✓ GPS location obtained:', position.coords.latitude, position.coords.longitude);
+                    resolve({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    });
+                },
+                (error) => {
+                    console.warn('GPS location error:', error.message);
+                    // User denied or error occurred - continue without GPS
+                    resolve(null);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        });
+    }
+
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -210,10 +243,18 @@
         loginBtn.classList.add('hidden');
         loadingBtn.classList.remove('hidden');
         
+        // Get GPS location from browser
+        const gpsLocation = await getBrowserLocation();
+        
         const formData = {
             login: document.getElementById('login').value,
-            password: document.getElementById('password').value
+            password: document.getElementById('password').value,
+            gps_latitude: gpsLocation?.latitude || null,
+            gps_longitude: gpsLocation?.longitude || null,
+            gps_accuracy: gpsLocation?.accuracy || null
         };
+        
+        console.log('Logging in with GPS data:', gpsLocation ? 'Yes' : 'No');
         
         try {
             const response = await fetch('/api/auth/login', {

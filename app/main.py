@@ -128,6 +128,9 @@ from typing import Optional
 class LoginRequest(BaseModel):
     login: str
     password: str
+    gps_latitude: Optional[float] = None
+    gps_longitude: Optional[float] = None
+    gps_accuracy: Optional[float] = None
 
 class RegisterRequest(BaseModel):
     first_name: str
@@ -149,10 +152,35 @@ class PasswordResetRequest(BaseModel):
     new_password: str
 
 @app.post("/api/auth/login")
-async def login_api(request: LoginRequest):
-    """API endpoint for user login."""
+async def login_api(request: LoginRequest, req: Request):
+    """API endpoint for user login with GPS-based location tracking."""
     auth = get_auth()
     result = auth.authenticate_user(request.login, request.password)
+    
+    # Track location on successful login using GPS coordinates
+    if result.get('success'):
+        from .location_tracker import get_location_tracker
+        tracker = get_location_tracker()
+        
+        user_data = result.get('user', {})
+        user_id = str(user_data.get('index', 'unknown'))
+        username = user_data.get('username', 'unknown')
+        
+        # Log location with GPS coordinates
+        try:
+            location_data = await tracker.log_login_gps(
+                req, 
+                user_id, 
+                username,
+                gps_latitude=request.gps_latitude,
+                gps_longitude=request.gps_longitude,
+                gps_accuracy=request.gps_accuracy
+            )
+            logger.info(f"✓ GPS location tracked for user {username}: {location_data.get('city', 'Unknown')}")
+        except Exception as e:
+            logger.error(f"Location tracking failed: {str(e)}")
+            # Don't fail login if location tracking fails
+    
     return JSONResponse(content=result)
 
 @app.post("/api/auth/register")
