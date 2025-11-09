@@ -29,6 +29,7 @@ class ChatService:
         self.db = database
         self.context = []
         self.language = None
+        self.force_language = False  # NEW: Track if language is manually forced
         self.pending_action = None
         self.conversation_history = []
         self.current_simulation_id = None  # Track current simulation being discussed
@@ -122,6 +123,19 @@ class ChatService:
     def _get_system_prompt(self, user_simulations: List[Dict]) -> str:
         """Generate system prompt with user's simulation context."""
         
+        # Language name mapping for forced language responses
+        language_names = {
+            'en': 'English',
+            'hi': 'हिंदी (Hindi)',
+            'bn': 'বাংলা (Bengali)',
+            'es': 'Español (Spanish)',
+            'fr': 'Français (French)',
+            'de': 'Deutsch (German)',
+            'zh': '中文 (Chinese)',
+            'ja': '日本語 (Japanese)',
+            'ko': '한국어 (Korean)'
+        }
+        
         sim_list = "\n".join([
             f"- ID: {sim['simulation_id']}, "
             f"Patients Enrolled: {sim.get('patients_enrolled', 'N/A')}, "
@@ -135,6 +149,12 @@ class ChatService:
         current_context = ""
         if self.current_simulation_id:
             current_context = f"\n\n**CURRENT SIMULATION IN DISCUSSION:** {self.current_simulation_id}\n(User is currently asking about this simulation. Use it as default when they say 'this simulation', 'it', or don't specify which one.)"
+        
+        # Check if language is forced (manually selected by user)
+        language_instruction = "ALWAYS respond in the SAME LANGUAGE the user uses"
+        if self.language and hasattr(self, 'force_language') and self.force_language:
+            lang_name = language_names.get(self.language, self.language)
+            language_instruction = f"⚠️ CRITICAL: User has MANUALLY selected {lang_name} language. You MUST respond ONLY in {lang_name}, regardless of what language the user's input is in. This is a forced language mode."
         
         return f"""You are a multilingual AI assistant for a Clinical Trial Simulation platform.
 
@@ -154,7 +174,7 @@ class ChatService:
 5. Explain simulation results and statistics
 
 **Important Rules:**
-1. ALWAYS respond in the SAME LANGUAGE the user uses
+1. {language_instruction}
 2. For data updates, show: Field name, Current value, New value
 3. ALWAYS ask for confirmation before making any changes
 4. Users can ONLY update INPUT fields, NOT output/results

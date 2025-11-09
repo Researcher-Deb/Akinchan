@@ -65,7 +65,22 @@ A full-featured FastAPI web application that simulates clinical trial outcomes w
 - 🛑 Stop speaking button to interrupt long responses
 - 📝 Transcription appears in chat like typed messages
 - 🌐 Works on Windows 10 (local) and Linux Cloud Run
-- � Service account authentication for Google Cloud APIs
+- 🔒 Service account authentication for Google Cloud APIs
+
+**Language Selection:**
+- 🌐 **Auto-Detect Mode** (default): Bot automatically detects and responds in your language
+- 🎯 **Manual Selection**: Choose from 10 languages via dropdown selector
+  - Supported Languages: English, Hindi, Bengali, Spanish, French, German, Chinese, Japanese, Korean
+- 💾 **Persistent Preference**: Language selection saved in browser localStorage
+- 🔄 **Force Language Mode**: When manually selected, bot responds ONLY in that language regardless of input language
+- ✨ **Visual Feedback**: Toast notifications when changing language mode
+- 🔀 **Flexible Switching**: Switch between auto and manual modes anytime during conversation
+
+**How Language Selection Works:**
+- **Auto Mode**: Bot detects your language from input and responds in the same language
+- **Manual Mode**: Select a language from dropdown → Bot will always respond in that language
+- Example: Select "Spanish" → Type "Hello, what's my simulation status?" → Bot responds in Spanish
+- Language preference persists across sessions (saved in browser)
 
 ### 2. **Clinical Trial Simulation**
 - Patient cohort generation with synthetic data
@@ -97,8 +112,32 @@ A full-featured FastAPI web application that simulates clinical trial outcomes w
 - User profile management
 - Password recovery workflow
 - Permission-controlled data access (users can only modify their own simulations)
+- **🌍 Location Tracking**: Automatically logs user location on login (IP-based geolocation)
 
-### 6. **Conversational Interface** 💬
+### 6. **📍 Login Location Tracking** (NEW)
+- **Automatic Tracking**: Logs IP address and location on every successful login
+- **Geolocation Data**: Country, region, city, latitude/longitude, ISP, timezone
+- **Audit Trail**: Immutable append-only CSV file (`data/login_history.csv`)
+- **Security**: File set to read-only after each write (cannot be edited)
+- **Privacy**: Uses free IP geolocation API (ip-api.com, no API key needed)
+- **Non-blocking**: Location lookup doesn't delay login process
+
+**Tracked Information:**
+- Timestamp of login
+- User ID and username
+- IP address (supports proxy headers: X-Forwarded-For, X-Real-IP)
+- Geographic location (country, region, city)
+- Coordinates (latitude, longitude)
+- Internet Service Provider (ISP)
+- Timezone
+
+**Example Log Entry:**
+```csv
+timestamp,user_id,username,ip_address,country,region,city,latitude,longitude,isp,timezone
+2025-11-09 15:30:45,2,user1,103.45.67.89,India,West Bengal,Kolkata,22.5726,88.3639,Airtel,Asia/Kolkata
+```
+
+### 7. **Conversational Interface** 💬
 **Natural Language Simulation Management:**
 - View all your simulations: *"Show me my simulations"*
 - Update parameters: *"Change patient count to 500 in simulation ABC123"*
@@ -137,6 +176,7 @@ Cloud_Run_Hack/
 │   ├── simulator.py            # Clinical trial simulation engine
 │   ├── database.py             # CSV data operations & management
 │   ├── auth.py                 # Authentication & password hashing
+│   ├── location_tracker.py     # Login location tracking (NEW)
 │   ├── ml_service.py           # ML model service (Gemini API)
 │   ├── logging_config.py       # Centralized logging configuration
 │   └── fallback_agents.py      # Rule-based fallback agents
@@ -170,6 +210,7 @@ Cloud_Run_Hack/
 │   ├── outcomes.csv            # Trial outcomes
 │   ├── simulation_results.csv  # Saved simulations (linked to trials.csv)
 │   ├── chat_history.csv        # Chat conversation logs
+│   ├── login_history.csv       # Login location tracking (NEW, read-only)
 │   └── Users.csv               # User accounts (hashed passwords)
 │
 ├── secrets/
@@ -210,6 +251,7 @@ Cloud_Run_Hack/
 - **Google Gemini 2.5 Flash**: AI agent orchestration & chat
 - **Google Cloud Speech-to-Text**: Voice transcription (v1, WebM/Opus)
 - **Google Cloud Text-to-Speech**: Voice synthesis (v1, MP3 output)
+- **httpx**: Async HTTP client for IP geolocation API calls
 - **Pandas**: CSV data manipulation & analysis
 - **Pydantic**: Data validation & settings management
 - **Jinja2**: Server-side template rendering

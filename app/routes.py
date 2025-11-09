@@ -534,23 +534,45 @@ def get_chat_service(user_id: str, username: str, db) -> 'ChatService':
 async def send_chat_message(
     message: str = Form(...),
     user_id: str = Form(...),
-    username: str = Form(...)
+    username: str = Form(...),
+    language_mode: str = Form(default='auto'),
+    force_language: Optional[str] = Form(default=None)
 ):
     """
     Send a message to the chatbot and get a response.
     Supports English, Hindi, Bengali, and other languages.
+    
+    Args:
+        message: User's message
+        user_id: User ID
+        username: Username
+        language_mode: 'auto' for auto-detection, or specific language code
+        force_language: If not 'auto', force bot to respond in this language
     """
     try:
         logger.info(f"Chat message from {username}: {message[:50]}...")
+        logger.info(f"Language mode: {language_mode}, Force language: {force_language}")
         
         # Get or create chat service instance (maintains session)
         db = get_db()
         chat_service = get_chat_service(user_id=user_id, username=username, db=db)
         
+        # Set language if forced (not auto mode)
+        if language_mode != 'auto' and force_language:
+            chat_service.language = force_language
+            chat_service.force_language = True  # Mark as forced language mode
+            logger.info(f"Forcing language: {force_language}")
+        else:
+            chat_service.force_language = False  # Auto-detect mode
+        
         # Process message
         result = await chat_service.process_message(message)
         
-        logger.info(f"Chat response generated: {result['action_type']}")
+        # If in manual language mode, ensure response is in that language
+        if language_mode != 'auto' and force_language:
+            result['language'] = force_language
+        
+        logger.info(f"Chat response generated: {result['action_type']} in language: {result['language']}")
         
         return JSONResponse(content={
             'success': True,
