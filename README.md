@@ -112,30 +112,41 @@ A full-featured FastAPI web application that simulates clinical trial outcomes w
 - User profile management
 - Password recovery workflow
 - Permission-controlled data access (users can only modify their own simulations)
-- **🌍 Location Tracking**: Automatically logs user location on login (IP-based geolocation)
+- **🌍 GPS Location Tracking**: Captures precise location using browser GPS on login
 
-### 6. **📍 Login Location Tracking** (NEW)
-- **Automatic Tracking**: Logs IP address and location on every successful login
-- **Geolocation Data**: Country, region, city, latitude/longitude, ISP, timezone
+### 6. **📍 GPS-Based Login Location Tracking** (NEW)
+- **Browser GPS Permission**: Requests location access on login (standard browser prompt)
+- **Precise Location**: Captures GPS coordinates (latitude, longitude, accuracy)
+- **Reverse Geocoding**: Converts coordinates to readable address using OpenStreetMap Nominatim
+- **Privacy-First**: Only collects location when user explicitly grants permission
+- **Geolocation Data**: Country, region, city, GPS coordinates, accuracy radius
 - **Audit Trail**: Immutable append-only CSV file (`data/login_history.csv`)
 - **Security**: File set to read-only after each write (cannot be edited)
-- **Privacy**: Uses free IP geolocation API (ip-api.com, no API key needed)
+- **Graceful Fallback**: Login succeeds even if GPS is denied or unavailable
 - **Non-blocking**: Location lookup doesn't delay login process
 
 **Tracked Information:**
 - Timestamp of login
 - User ID and username
-- IP address (supports proxy headers: X-Forwarded-For, X-Real-IP)
-- Geographic location (country, region, city)
-- Coordinates (latitude, longitude)
-- Internet Service Provider (ISP)
-- Timezone
+- IP address (for reference only)
+- GPS coordinates (latitude, longitude)
+- Location accuracy (in meters)
+- Geographic location (country, region, city) - from reverse geocoding
+- Location source: "GPS Location" with accuracy indicator
 
 **Example Log Entry:**
 ```csv
 timestamp,user_id,username,ip_address,country,region,city,latitude,longitude,isp,timezone
-2025-11-09 15:30:45,2,user1,103.45.67.89,India,West Bengal,Kolkata,22.5726,88.3639,Airtel,Asia/Kolkata
+2025-11-09 15:30:45,2,user1,192.168.1.100,India,West Bengal,Kolkata,22.5726,88.3639,GPS Location (±15m),Unknown
 ```
+
+**How It Works:**
+1. User clicks "Sign In" on login page
+2. Browser requests GPS permission (standard location prompt)
+3. If granted: GPS coordinates captured with accuracy
+4. Reverse geocoding converts coordinates to readable location
+5. Login proceeds and location saved to audit log
+6. If denied: Login still succeeds, location marked as "GPS Denied or Unavailable"
 
 ### 7. **Conversational Interface** 💬
 **Natural Language Simulation Management:**
