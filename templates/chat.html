@@ -1,0 +1,808 @@
+{% extends "base.html" %}
+
+{% block title %}Chat Assistant - Akinchan{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-8">
+    <div class="max-w-6xl mx-auto px-4">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-16 h-16 gradient-bg rounded-xl flex items-center justify-center">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900">💬 Chat Assistant</h1>
+                        <p class="text-gray-600">Multilingual AI assistant for your simulations</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div id="languageIndicator" class="px-4 py-2 bg-indigo-100 text-indigo-800 rounded-lg font-semibold">
+                        <span class="mr-2">🌐</span>
+                        <span id="currentLanguage">English</span>
+                    </div>
+                    <button onclick="clearChat()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg font-semibold text-gray-700 transition">
+                        🗑️ Clear Chat
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Chat Container -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Sidebar - User Simulations -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-2xl shadow-lg p-6 sticky top-6">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4">📊 Your Simulations</h2>
+                    <div id="simulationsList" class="space-y-3">
+                        <!-- Simulations will be loaded here -->
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <h3 class="text-sm font-bold text-gray-700 mb-3">Quick Commands:</h3>
+                        <div class="space-y-2 text-xs text-gray-600">
+                            <p>• "Show my simulations"</p>
+                            <p>• "Update patient count"</p>
+                            <p>• "Translate to Hindi"</p>
+                            <p>• "Explain results"</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div class="lg:col-span-3">
+                <div class="bg-white rounded-2xl shadow-lg flex flex-col" style="height: 70vh;">
+                    <!-- Chat Messages -->
+                    <div id="chatMessages" class="flex-1 overflow-y-auto p-6 space-y-4">
+                        <!-- Welcome Message -->
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 gradient-bg rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="text-white text-lg">🤖</span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl rounded-tl-none p-4 border border-indigo-100">
+                                    <p class="text-gray-800">
+                                        👋 Hello! I'm your multilingual AI assistant. I can help you with:
+                                    </p>
+                                    <ul class="mt-2 space-y-1 text-sm text-gray-700">
+                                        <li>✓ View and manage your simulations</li>
+                                        <li>✓ Update simulation parameters</li>
+                                        <li>✓ Translate data to Hindi, Bengali, or other languages</li>
+                                        <li>✓ Explain results and statistics</li>
+                                    </ul>
+                                    <p class="mt-3 text-sm text-gray-600">
+                                        <strong>Tip:</strong> You can chat in English, Hindi (हिंदी), Bengali (বাংলা), or any language supported by Gemini!
+                                    </p>
+                                </div>
+                                <span class="text-xs text-gray-400 mt-1 block">Just now</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Typing Indicator -->
+                    <div id="typingIndicator" class="hidden px-6 py-2">
+                        <div class="flex items-center space-x-2 text-gray-500">
+                            <div class="flex space-x-1">
+                                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms;"></div>
+                                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 150ms;"></div>
+                                <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms;"></div>
+                            </div>
+                            <span class="text-sm">AI is thinking...</span>
+                        </div>
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="border-t border-gray-200 p-4">
+                        <!-- Voice Recording Indicator -->
+                        <div id="recordingIndicator" class="hidden mb-3 flex items-center justify-center space-x-3 bg-red-50 border border-red-200 rounded-lg p-3">
+                            <div class="flex space-x-1">
+                                <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                                <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse" style="animation-delay: 200ms;"></div>
+                                <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse" style="animation-delay: 400ms;"></div>
+                            </div>
+                            <span class="text-red-700 font-semibold">🎤 Recording... Speak now</span>
+                            <button onclick="stopRecording()" class="ml-4 px-4 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                                Stop
+                            </button>
+                        </div>
+
+                        <!-- Audio Playing Indicator -->
+                        <div id="audioPlayingIndicator" class="hidden mb-3 flex items-center justify-center space-x-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <div class="flex space-x-1">
+                                <div class="w-2 h-4 bg-blue-500 rounded animate-bounce"></div>
+                                <div class="w-2 h-6 bg-blue-500 rounded animate-bounce" style="animation-delay: 100ms;"></div>
+                                <div class="w-2 h-5 bg-blue-500 rounded animate-bounce" style="animation-delay: 200ms;"></div>
+                                <div class="w-2 h-7 bg-blue-500 rounded animate-bounce" style="animation-delay: 300ms;"></div>
+                            </div>
+                            <span class="text-blue-700 font-semibold">🔊 Speaking...</span>
+                            <button onclick="stopSpeaking()" class="ml-4 px-4 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                                🔇 Stop Speaking
+                            </button>
+                        </div>
+
+                        <div class="flex items-end space-x-3">
+                            <!-- Voice Input Button -->
+                            <button
+                                id="voiceButton"
+                                onclick="startRecording()"
+                                class="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 rounded-xl hover:opacity-90 transition-all transform hover:scale-105 shadow-lg"
+                                title="Voice input"
+                            >
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                                </svg>
+                            </button>
+
+                            <div class="flex-1">
+                                <textarea
+                                    id="messageInput"
+                                    rows="2"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                                    placeholder="Type your message or use voice... (English, हिंदी, বাংলা)"
+                                    onkeydown="handleKeyPress(event)"
+                                ></textarea>
+                            </div>
+                            <button
+                                onclick="sendMessage()"
+                                id="sendButton"
+                                class="gradient-bg text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-all transform hover:scale-105 shadow-lg flex items-center space-x-2"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                </svg>
+                                <span>Send</span>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">
+                            Press <kbd class="px-2 py-1 bg-gray-100 rounded">Ctrl+Enter</kbd> to send • Click 🎤 for voice input
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Get user info from localStorage
+    let user = null;
+    let authToken = null;
+    
+    try {
+        const userStr = localStorage.getItem('user');
+        const tokenStr = localStorage.getItem('auth_token');
+        
+        if (userStr && tokenStr) {
+            user = JSON.parse(userStr);
+            authToken = tokenStr;
+        }
+    } catch (e) {
+        console.error('Error parsing user data:', e);
+    }
+    
+    // Check if logged in - redirect if not
+    if (!user || !user.user_id || !authToken) {
+        console.log('Not logged in, redirecting to login page');
+        window.location.href = '/login';
+        throw new Error('Not authenticated'); // Stop script execution
+    }
+
+    console.log('User authenticated:', user.username);
+
+    // Language names mapping
+    const languageNames = {
+        'en': 'English',
+        'hi': 'हिंदी (Hindi)',
+        'bn': 'বাংলা (Bengali)'
+    };
+
+    let currentLanguage = 'en';
+
+    // Load user simulations on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('Chat page loaded, user:', user);
+        loadUserSimulations();
+        scrollToBottom();
+    });
+
+    async function loadUserSimulations() {
+        try {
+            console.log('Loading simulations for user:', user.user_id);
+            const response = await fetch(`/api/chat/user-simulations?user_id=${user.user_id}`);
+            const data = await response.json();
+
+            console.log('Simulations loaded:', data);
+            const simulationsList = document.getElementById('simulationsList');
+            
+            if (data.success && data.simulations.length > 0) {
+                simulationsList.innerHTML = data.simulations.map(sim => `
+                    <a href="/results?simulation_id=${sim.simulation_id}" 
+                       class="block p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-indigo-50 hover:border-indigo-300 transition cursor-pointer hover:shadow-md">
+                        <p class="font-semibold text-sm text-indigo-600 hover:text-indigo-800 break-words" style="word-break: break-word; overflow-wrap: anywhere;">
+                            ${sim.simulation_id}
+                        </p>
+                        <p class="text-xs text-gray-600 mt-1">
+                            ${sim.patients_enrolled || 'N/A'} patients • ${((sim.success_probability || 0) * 100).toFixed(1)}% success
+                        </p>
+                        <p class="text-xs text-indigo-500 mt-1 font-medium">
+                            📊 View Dashboard →
+                        </p>
+                    </a>
+                `).join('');
+            } else {
+                simulationsList.innerHTML = `
+                    <p class="text-sm text-gray-500 text-center py-4">
+                        No simulations yet.<br>
+                        <a href="/simulator" class="text-indigo-600 hover:text-indigo-700 font-semibold">Create one →</a>
+                    </p>
+                `;
+            }
+        } catch (error) {
+            console.error('Error loading simulations:', error);
+        }
+    }
+
+    function selectSimulation(simId) {
+        const messageInput = document.getElementById('messageInput');
+        messageInput.value = `Tell me about simulation ${simId}`;
+        messageInput.focus();
+    }
+
+    function handleKeyPress(event) {
+        if (event.ctrlKey && event.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+    async function sendMessage() {
+        const messageInput = document.getElementById('messageInput');
+        const message = messageInput.value.trim();
+
+        if (!message) return;
+
+        // Add user message to chat
+        addMessageToChat(message, 'user');
+        
+        // Clear input
+        messageInput.value = '';
+
+        // Show typing indicator
+        showTypingIndicator();
+
+        try {
+            console.log('Sending message:', message);
+            const response = await fetch('/api/chat/message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    message: message,
+                    user_id: user.user_id,
+                    username: user.username
+                })
+            });
+
+            console.log('Response status:', response.status);
+            const data = await response.json();
+            console.log('Response data:', data);
+
+            // Hide typing indicator
+            hideTypingIndicator();
+
+            if (data.success) {
+                // Update language if detected
+                if (data.language) {
+                    currentLanguage = data.language;
+                    updateLanguageIndicator(data.language);
+                }
+
+                // Add assistant response
+                addMessageToChat(data.response, 'assistant', data.action_type);
+
+                // If update was executed, reload simulations
+                if (data.action_type === 'update_executed') {
+                    setTimeout(() => {
+                        loadUserSimulations();
+                    }, 1000);
+                }
+            } else {
+                const errorMsg = data.error || data.message || 'Unknown error occurred';
+                console.error('Chat API error:', errorMsg);
+                addMessageToChat(`Error: ${errorMsg}`, 'assistant', 'error');
+            }
+
+        } catch (error) {
+            hideTypingIndicator();
+            console.error('Chat error:', error);
+            addMessageToChat(`Connection error: ${error.message}`, 'assistant', 'error');
+        }
+    }
+
+    function addMessageToChat(message, sender, actionType = 'chat') {
+        const chatMessages = document.getElementById('chatMessages');
+        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        let messageHTML = '';
+
+        if (sender === 'user') {
+            messageHTML = `
+                <div class="flex items-start space-x-3 justify-end">
+                    <div class="flex-1 max-w-2xl">
+                        <div class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl rounded-tr-none p-4 shadow-md">
+                            <p class="whitespace-pre-wrap">${escapeHtml(message)}</p>
+                        </div>
+                        <span class="text-xs text-gray-400 mt-1 block text-right">${timestamp}</span>
+                    </div>
+                    <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-white text-lg font-bold">${user.username.charAt(0).toUpperCase()}</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            const actionIcon = getActionIcon(actionType);
+            const actionColor = getActionColor(actionType);
+            
+            messageHTML = `
+                <div class="flex items-start space-x-3">
+                    <div class="w-10 h-10 gradient-bg rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-white text-lg">🤖</span>
+                    </div>
+                    <div class="flex-1 max-w-2xl">
+                        <div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl rounded-tl-none p-4 border ${actionColor}">
+                            ${actionIcon ? `<span class="mr-2">${actionIcon}</span>` : ''}
+                            <p class="text-gray-800 whitespace-pre-wrap">${formatMessage(message)}</p>
+                        </div>
+                        <span class="text-xs text-gray-400 mt-1 block">${timestamp}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        chatMessages.innerHTML += messageHTML;
+        scrollToBottom();
+    }
+
+    function getActionIcon(actionType) {
+        const icons = {
+            'chat': '',
+            'update_request': '📝',
+            'update_executed': '✅',
+            'translation': '🌐',
+            'error': '❌',
+            'clarification': '❓'
+        };
+        return icons[actionType] || '';
+    }
+
+    function getActionColor(actionType) {
+        const colors = {
+            'chat': 'border-gray-200',
+            'update_request': 'border-yellow-200 bg-yellow-50',
+            'update_executed': 'border-green-200 bg-green-50',
+            'translation': 'border-blue-200 bg-blue-50',
+            'error': 'border-red-200 bg-red-50',
+            'clarification': 'border-orange-200 bg-orange-50'
+        };
+        return colors[actionType] || 'border-gray-200';
+    }
+
+    function formatMessage(message) {
+        // Convert line breaks to <br>
+        return escapeHtml(message).replace(/\n/g, '<br>');
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function showTypingIndicator() {
+        document.getElementById('typingIndicator').classList.remove('hidden');
+        scrollToBottom();
+    }
+
+    function hideTypingIndicator() {
+        document.getElementById('typingIndicator').classList.add('hidden');
+    }
+
+    function scrollToBottom() {
+        const chatMessages = document.getElementById('chatMessages');
+        setTimeout(() => {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }, 100);
+    }
+
+    function updateLanguageIndicator(langCode) {
+        const languageName = languageNames[langCode] || langCode.toUpperCase();
+        document.getElementById('currentLanguage').textContent = languageName;
+    }
+
+    function clearChat() {
+        if (confirm('Are you sure you want to clear the chat history?')) {
+            const chatMessages = document.getElementById('chatMessages');
+            // Keep only the welcome message (first child)
+            while (chatMessages.children.length > 1) {
+                chatMessages.removeChild(chatMessages.lastChild);
+            }
+            currentLanguage = 'en';
+            updateLanguageIndicator('en');
+        }
+    }
+
+    // ==================== VOICE INPUT/OUTPUT ====================
+    
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+    let currentAudio = null;  // Global audio player for stop control
+
+    async function startRecording() {
+        console.log('🎤 ========== START RECORDING CALLED ==========');
+        try {
+            console.log('📱 Requesting microphone access...');
+            
+            // Request microphone permission
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    sampleRate: 48000
+                } 
+            });
+            
+            console.log('✓ Microphone access granted');
+            console.log('   Stream active:', stream.active);
+            console.log('   Audio tracks:', stream.getAudioTracks().length);
+            
+            // Create MediaRecorder with WebM Opus codec
+            const options = { mimeType: 'audio/webm;codecs=opus' };
+            console.log('📹 Creating MediaRecorder with options:', options);
+            
+            mediaRecorder = new MediaRecorder(stream, options);
+            audioChunks = [];
+            
+            console.log('   MediaRecorder state:', mediaRecorder.state);
+            console.log('   MediaRecorder mimeType:', mediaRecorder.mimeType);
+            
+            mediaRecorder.ondataavailable = (event) => {
+                console.log('📊 Data available event:', event.data.size, 'bytes');
+                if (event.data.size > 0) {
+                    audioChunks.push(event.data);
+                    console.log('   Total chunks:', audioChunks.length);
+                }
+            };
+            
+            mediaRecorder.onstop = async () => {
+                console.log('🛑 MediaRecorder STOP event fired');
+                console.log('   Total audio chunks collected:', audioChunks.length);
+                
+                // Combine chunks into blob
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm;codecs=opus' });
+                console.log('📦 Created audio blob:', audioBlob.size, 'bytes');
+                
+                if (audioBlob.size === 0) {
+                    console.error('❌ ERROR: Audio blob is empty! No data recorded.');
+                    alert('No audio was recorded. Please try again.');
+                    return;
+                }
+                
+                console.log('📤 Calling sendVoiceMessage...');
+                await sendVoiceMessage(audioBlob);
+                
+                // Stop all tracks
+                console.log('🔇 Stopping all media tracks...');
+                stream.getTracks().forEach(track => {
+                    console.log('   Stopping track:', track.kind, track.label);
+                    track.stop();
+                });
+            };
+            
+            mediaRecorder.onerror = (event) => {
+                console.error('❌ MediaRecorder ERROR:', event.error);
+            };
+            
+            // Start recording
+            console.log('▶️ Starting MediaRecorder...');
+            mediaRecorder.start();
+            isRecording = true;
+            
+            console.log('✓ MediaRecorder started, state:', mediaRecorder.state);
+            
+            // Show recording indicator
+            document.getElementById('recordingIndicator').classList.remove('hidden');
+            document.getElementById('voiceButton').disabled = true;
+            document.getElementById('voiceButton').classList.add('opacity-50');
+            
+            console.log('✓ UI updated - recording indicator shown');
+            console.log('🎤 ========== RECORDING IN PROGRESS ==========');
+                        console.log('🎤 Recording started...');
+            
+        } catch (error) {
+            console.error('❌ MICROPHONE ERROR:', error);
+            console.error('   Error name:', error.name);
+            console.error('   Error message:', error.message);
+            alert('Could not access microphone. Please allow microphone permissions and try again.\n\nError: ' + error.message);
+        }
+    }
+
+    function stopRecording() {
+        console.log('🛑 ========== STOP RECORDING CALLED ==========');
+        console.log('   isRecording:', isRecording);
+        console.log('   mediaRecorder:', mediaRecorder);
+        
+        if (mediaRecorder && isRecording) {
+            console.log('   Current MediaRecorder state:', mediaRecorder.state);
+            console.log('   Audio chunks collected so far:', audioChunks.length);
+            
+            console.log('⏹️ Calling mediaRecorder.stop()...');
+            mediaRecorder.stop();
+            isRecording = false;
+            
+            // Hide recording indicator
+            document.getElementById('recordingIndicator').classList.add('hidden');
+            document.getElementById('voiceButton').disabled = false;
+            document.getElementById('voiceButton').classList.remove('opacity-50');
+            
+            console.log('✓ Recording stopped, UI updated');
+            console.log('⏳ Waiting for onstop event to process audio...');
+        } else {
+            console.warn('⚠️ Cannot stop - not currently recording');
+            console.log('   mediaRecorder exists:', !!mediaRecorder);
+            console.log('   isRecording flag:', isRecording);
+        }
+    }
+
+    async function sendVoiceMessage(audioBlob) {
+        try {
+            console.log('🎤 sendVoiceMessage called with blob size:', audioBlob.size);
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Step 1: Transcribe audio to text
+            console.log('📤 Step 1: Transcribing audio...');
+            
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'recording.webm');
+            formData.append('language', currentLanguage);
+            
+            const transcribeResponse = await fetch('/api/chat/transcribe', {
+                method: 'POST',
+                body: formData
+            });
+            
+            console.log('� Transcribe response status:', transcribeResponse.status);
+            
+            if (!transcribeResponse.ok) {
+                const errorText = await transcribeResponse.text();
+                console.error('❌ Transcription error:', errorText);
+                throw new Error(`Transcription failed: ${transcribeResponse.statusText}`);
+            }
+            
+            const transcribeData = await transcribeResponse.json();
+            console.log('✓ Transcription received:', transcribeData);
+            
+            if (!transcribeData.success || !transcribeData.text) {
+                throw new Error(transcribeData.error || 'No speech detected');
+            }
+            
+            const transcribedText = transcribeData.text;
+            console.log('� Transcribed text:', transcribedText);
+            
+            // Display transcribed text as user message
+            addMessageToChat(transcribedText, 'user');
+            scrollToBottom();
+            
+            // Step 2: Send transcribed text to chatbot (same as typing)
+            console.log('🤖 Step 2: Sending to chatbot...');
+            
+            const chatResponse = await fetch('/api/chat/message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    message: transcribedText,
+                    user_id: user.user_id,
+                    username: user.username
+                })
+            });
+            
+            console.log('📥 Chat response status:', chatResponse.status);
+            const chatData = await chatResponse.json();
+            console.log('✓ Chat response received:', chatData);
+            
+            // Hide typing indicator
+            hideTypingIndicator();
+            
+            if (chatData.success) {
+                // Update language if detected
+                if (chatData.language) {
+                    currentLanguage = chatData.language;
+                    updateLanguageIndicator(chatData.language);
+                }
+                
+                // Display bot response
+                console.log('💬 Adding bot response:', chatData.response);
+                addMessageToChat(chatData.response, 'assistant', chatData.action_type);
+                
+                // If update was executed, reload simulations
+                if (chatData.action_type === 'update_executed') {
+                    setTimeout(() => {
+                        loadUserSimulations();
+                    }, 1000);
+                }
+                
+                // Step 3: Convert response to speech and play
+                console.log('🔊 Step 3: Converting response to speech...');
+                await playTextAsSpeech(chatData.response, currentLanguage);
+                
+            } else {
+                const errorMsg = chatData.error || chatData.message || 'Unknown error occurred';
+                console.error('Chat API error:', errorMsg);
+                addMessageToChat(`Error: ${errorMsg}`, 'assistant', 'error');
+            }
+            
+            scrollToBottom();
+            
+        } catch (error) {
+            console.error('❌ Voice message error:', error);
+            hideTypingIndicator();
+            
+            addMessageToChat(
+                `❌ Voice error: ${error.message}. Please try typing your message instead.`,
+                'assistant'
+            );
+            scrollToBottom();
+        }
+    }
+    
+    async function playTextAsSpeech(text, language) {
+        try {
+            console.log('🔊 Converting text to speech:', text.substring(0, 50) + '...');
+            
+            const formData = new FormData();
+            formData.append('text', text);
+            formData.append('language', language);
+            
+            const response = await fetch('/api/chat/text-to-speech', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                console.warn('⚠️ TTS failed:', response.statusText);
+                return;
+            }
+            
+            // Get audio blob directly
+            const audioBlob = await response.blob();
+            console.log('✓ Audio received:', audioBlob.size, 'bytes');
+            
+            // Stop any currently playing audio
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            
+            // Create audio URL and play
+            const audioUrl = URL.createObjectURL(audioBlob);
+            currentAudio = new Audio(audioUrl);
+            
+            // Show "Speaking" indicator
+            document.getElementById('audioPlayingIndicator').classList.remove('hidden');
+            
+            currentAudio.onplay = () => {
+                console.log('▶️ Playing audio...');
+            };
+            
+            currentAudio.onended = () => {
+                console.log('✓ Audio playback finished');
+                document.getElementById('audioPlayingIndicator').classList.add('hidden');
+                URL.revokeObjectURL(audioUrl);
+                currentAudio = null;
+            };
+            
+            currentAudio.onerror = (e) => {
+                console.error('❌ Audio playback error:', e);
+                document.getElementById('audioPlayingIndicator').classList.add('hidden');
+                URL.revokeObjectURL(audioUrl);
+                currentAudio = null;
+            };
+            
+            await currentAudio.play();
+            
+        } catch (error) {
+            console.error('❌ TTS error:', error);
+            document.getElementById('audioPlayingIndicator').classList.add('hidden');
+            // Don't throw - TTS is optional, chat should continue
+        }
+    }
+    
+    function stopSpeaking() {
+        console.log('🔇 Stop speaking button clicked');
+        
+        if (currentAudio) {
+            console.log('⏹️ Stopping audio playback');
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            currentAudio = null;
+            document.getElementById('audioPlayingIndicator').classList.add('hidden');
+            console.log('✓ Audio stopped');
+        } else {
+            console.log('⚠️ No audio currently playing');
+        }
+    }
+
+    function playAudioResponse(audioBase64) {
+        try {
+            // Convert base64 to blob
+            const audioData = atob(audioBase64);
+            const audioArray = new Uint8Array(audioData.length);
+            for (let i = 0; i < audioData.length; i++) {
+                audioArray[i] = audioData.charCodeAt(i);
+            }
+            const audioBlob = new Blob([audioArray], { type: 'audio/mpeg' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            
+            // Create and play audio
+            const audio = new Audio(audioUrl);
+            audio.play();
+            
+            console.log('🔊 Playing audio response');
+            
+            // Cleanup URL after playing
+            audio.onended = () => {
+                URL.revokeObjectURL(audioUrl);
+            };
+            
+        } catch (error) {
+            console.error('Audio playback error:', error);
+        }
+    }
+
+    // ==================== END VOICE INPUT/OUTPUT ====================
+
+</script>
+
+<style>
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .animate-bounce {
+        animation: bounce 0.6s ease-in-out infinite;
+    }
+    
+    kbd {
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    /* Custom scrollbar for chat */
+    #chatMessages::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    #chatMessages::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    #chatMessages::-webkit-scrollbar-thumb {
+        background: #c7d2fe;
+        border-radius: 10px;
+    }
+    
+    #chatMessages::-webkit-scrollbar-thumb:hover {
+        background: #a5b4fc;
+    }
+</style>
+{% endblock %}

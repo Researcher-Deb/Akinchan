@@ -1,0 +1,43 @@
+# FastAPI and Web Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.4.0
+pydantic-settings>=2.0.0
+jinja2>=3.1.0
+
+# Environment Variables
+python-dotenv>=1.0.0
+
+# Authentication & Security
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+
+# Machine Learning & NLP
+torch>=2.0.0
+transformers>=4.35.0
+bitsandbytes>=0.41.0
+
+# Google Cloud & Generative AI
+google-generativeai>=0.3.0
+google-cloud-genai>=0.1.0
+
+# Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Agent & LLM Framework
+langchain>=0.1.0
+
+# Utilities
+requests>=2.31.0
+python-multipart>=0.0.6
+
+# Development (optional)
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+
+
+google-cloud-speech==2.26.0
+google-cloud-texttospeech==2.16.3
+google-auth==2.29.0
+pydub==0.25.1
